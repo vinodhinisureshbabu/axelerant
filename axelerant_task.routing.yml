@@ -1,0 +1,9 @@
+axelerant_task.page_json: 
+  path: '/page_json/{siteapikey}/{nid}'
+  defaults:
+    _controller: '\Drupal\axelerant_task\Controller\GetNodeJson::data'
+    _title: 'Node Information'
+  requirements:
+    _custom_access: '\Drupal\axelerant_task\Controller\GetNodeJson::access'
+
+

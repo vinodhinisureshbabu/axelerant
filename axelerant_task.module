@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Contains axelerant_task.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_help().
+ */
+function axelerant_task_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the axelerant_task module.
+    case 'help.page.axelerant_task':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('1. Altering the Site information to introduce SITE API KEY. ') . '</p>';
+      $output .= '<p>' . t('2. Providing a way to view the json representation of node ') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function axelerant_task_form_system_site_information_settings_alter(&$form, $form_state, $form_id) {
+// Add Site API Key field to 'Site Information' section
+  $siteapikey = \Drupal::config('axelerant_task.configuration')->get('siteapikey');
+  $form['site_information']['site_api_key'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Site API Key'),
+        '#default_value' => $siteapikey? $siteapikey: 'No API Key yet',
+        '#description' => t('An API Key to access site pages in JSON format.'),
+  );
+  // Change form submit button text to 'Update Configuration'
+  $form['actions']['submit']['#value'] = t('Update configuration');
+  // Handle form submission
+  $form['#submit'][] = 'axelerant_task_submit_callback';
+}
+/*
+* Submit callback to store the site api key in module based configuration
+*/
+function axelerant_task_submit_callback($form, &$form_state) {
+  // Update the system variable Site API Key 
+  $config = \Drupal::configFactory()->getEditable('axelerant_task.configuration');
+  $site_api_key = $form_state->getValue(['site_api_key']);
+  $config->set('siteapikey', $site_api_key);
+  $config->save();
+  // Add message that Site API Key has been set
+  \Drupal::messenger()->addMessage(t('Successfully set Site API Key to %siteapikey.', [
+          '%siteapikey' => $site_api_key]));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function axelerant_task_uninstall() {
+  // Remove the previously set Site API Key configuration
+  Drupal::configFactory()->getEditable('axelerant_task.configuration')->delete();
+}
